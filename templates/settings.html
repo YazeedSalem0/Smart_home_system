@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Smart Home System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- System Configuration -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i>System Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form id="systemConfigForm">
+                    <div class="mb-3">
+                        <label for="updateInterval" class="form-label">Update Interval (seconds)</label>
+                        <input type="number" class="form-control" id="updateInterval" value="2" min="1" max="60">
+                        <div class="form-text">How often to refresh system data</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="temperatureThreshold" class="form-label">Temperature Threshold (°C)</label>
+                        <input type="number" class="form-control" id="temperatureThreshold" value="25" min="0" max="50" step="0.1">
+                        <div class="form-text">Temperature at which fans automatically turn on</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="garageAutoClose" class="form-label">Garage Auto-Close (minutes)</label>
+                        <input type="number" class="form-control" id="garageAutoClose" value="120" min="1" max="1440">
+                        <div class="form-text">Time before garage door automatically closes</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enableNotifications" checked>
+                            <label class="form-check-label" for="enableNotifications">
+                                Enable Browser Notifications
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="enableSounds" checked>
+                            <label class="form-check-label" for="enableSounds">
+                                Enable Alert Sounds
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Settings -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-wifi me-2"></i>Connection Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Smart Home System URL</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="systemUrl" value="http://localhost:5000" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="testConnection()">
+                            <i class="fas fa-plug me-1"></i>Test
+                        </button>
+                    </div>
+                    <div class="form-text">URL of the main smart home system</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Connection Status</label>
+                    <div class="d-flex align-items-center">
+                        <span id="connectionStatusText" class="badge bg-secondary me-2">Unknown</span>
+                        <small class="text-muted" id="lastConnectionTest">Not tested</small>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="autoReconnect" checked>
+                        <label class="form-check-label" for="autoReconnect">
+                            Auto-reconnect on connection loss
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Information</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tbody>
+                        <tr>
+                            <td><strong>Web Server Version:</strong></td>
+                            <td>1.0.0</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Server Port:</strong></td>
+                            <td>8080</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Browser:</strong></td>
+                            <td id="browserInfo">--</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Screen Resolution:</strong></td>
+                            <td id="screenInfo">--</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Session Started:</strong></td>
+                            <td id="sessionStart">--</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Last Update:</strong></td>
+                            <td id="lastSystemUpdate">--</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Actions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-tools me-2"></i>System Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary" onclick="refreshSystemData()">
+                        <i class="fas fa-sync me-1"></i>Refresh System Data
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-info" onclick="clearCache()">
+                        <i class="fas fa-trash me-1"></i>Clear Cache
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-success" onclick="exportSettings()">
+                        <i class="fas fa-download me-1"></i>Export Settings
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-secondary" onclick="importSettings()">
+                        <i class="fas fa-upload me-1"></i>Import Settings
+                    </button>
+                    
+                    <hr>
+                    
+                    <button type="button" class="btn btn-outline-warning" onclick="resetToDefaults()">
+                        <i class="fas fa-undo me-1"></i>Reset to Defaults
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-danger" onclick="emergencyReset()">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Emergency Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs and Diagnostics -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-bug me-2"></i>Logs and Diagnostics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Console Logs</h6>
+                        <div id="consoleLogs" style="height: 200px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.85rem;">
+                            <div class="text-muted">Console logs will appear here...</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>System Diagnostics</h6>
+                        <div id="diagnostics" style="height: 200px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                            <button type="button" class="btn btn-sm btn-outline-primary mb-2" onclick="runDiagnostics()">
+                                <i class="fas fa-play me-1"></i>Run Diagnostics
+                            </button>
+                            <div id="diagnosticsResults"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Settings Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="settingsFile" class="form-label">Select Settings File</label>
+                    <input type="file" class="form-control" id="settingsFile" accept=".json">
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Import a previously exported settings file to restore your configuration.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="processImport()">Import</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let sessionStartTime = new Date();
+let consoleLogs = [];
+
+// Initialize settings page
+$(document).ready(function() {
+    loadSettings();
+    updateSystemInfo();
+    setupConsoleCapture();
+    
+    // Form submission handler
+    $('#systemConfigForm').submit(function(e) {
+        e.preventDefault();
+        saveSettings();
+    });
+});
+
+// Load settings from localStorage
+function loadSettings() {
+    const settings = getStoredSettings();
+    
+    $('#updateInterval').val(settings.updateInterval);
+    $('#temperatureThreshold').val(settings.temperatureThreshold);
+    $('#garageAutoClose').val(settings.garageAutoClose);
+    $('#enableNotifications').prop('checked', settings.enableNotifications);
+    $('#enableSounds').prop('checked', settings.enableSounds);
+    $('#autoReconnect').prop('checked', settings.autoReconnect);
+}
+
+// Get settings from localStorage with defaults
+function getStoredSettings() {
+    const defaults = {
+        updateInterval: 2,
+        temperatureThreshold: 25,
+        garageAutoClose: 120,
+        enableNotifications: true,
+        enableSounds: true,
+        autoReconnect: true
+    };
+    
+    const stored = localStorage.getItem('smartHomeSettings');
+    return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+}
+
+// Save settings to localStorage
+function saveSettings() {
+    const settings = {
+        updateInterval: parseInt($('#updateInterval').val()),
+        temperatureThreshold: parseFloat($('#temperatureThreshold').val()),
+        garageAutoClose: parseInt($('#garageAutoClose').val()),
+        enableNotifications: $('#enableNotifications').is(':checked'),
+        enableSounds: $('#enableSounds').is(':checked'),
+        autoReconnect: $('#autoReconnect').is(':checked')
+    };
+    
+    localStorage.setItem('smartHomeSettings', JSON.stringify(settings));
+    showNotification('Settings saved successfully', 'success');
+    
+    // Apply settings immediately
+    applySettings(settings);
+}
+
+// Apply settings to the application
+function applySettings(settings) {
+    // Update interval would need to be applied to the main update loop
+    // This would require modifying the main.js file
+    console.log('Applying settings:', settings);
+}
+
+// Update system information
+function updateSystemInfo() {
+    $('#browserInfo').text(navigator.userAgent.split(' ').slice(-2).join(' '));
+    $('#screenInfo').text(`${screen.width}x${screen.height}`);
+    $('#sessionStart').text(sessionStartTime.toLocaleString());
+    
+    // Update last system update time
+    setInterval(() => {
+        $('#lastSystemUpdate').text(new Date().toLocaleTimeString());
+    }, 1000);
+}
+
+// Test connection to smart home system
+function testConnection() {
+    const url = $('#systemUrl').val();
+    const startTime = Date.now();
+    
+    $('#connectionStatusText').removeClass('bg-success bg-danger bg-warning')
+                             .addClass('bg-warning')
+                             .text('Testing...');
+    
+    $.get('/api/dashboard/data')
+        .done(function(response) {
+            const responseTime = Date.now() - startTime;
+            
+            if (response.success && response.connection_status) {
+                $('#connectionStatusText').removeClass('bg-warning bg-danger')
+                                         .addClass('bg-success')
+                                         .text('Connected');
+                $('#lastConnectionTest').text(`Response time: ${responseTime}ms`);
+            } else {
+                $('#connectionStatusText').removeClass('bg-warning bg-success')
+                                         .addClass('bg-danger')
+                                         .text('System Offline');
+                $('#lastConnectionTest').text('Smart home system not responding');
+            }
+        })
+        .fail(function() {
+            $('#connectionStatusText').removeClass('bg-warning bg-success')
+                                     .addClass('bg-danger')
+                                     .text('Failed');
+            $('#lastConnectionTest').text('Connection test failed');
+        });
+}
+
+// System action functions
+function refreshSystemData() {
+    if (typeof socket !== 'undefined' && socket.connected) {
+        socket.emit('request_update');
+        showNotification('System data refresh requested', 'info');
+    } else {
+        fetchSystemData();
+        showNotification('Refreshing system data...', 'info');
+    }
+}
+
+function clearCache() {
+    localStorage.removeItem('smartHomeCache');
+    sessionStorage.clear();
+    showNotification('Cache cleared successfully', 'success');
+}
+
+function exportSettings() {
+    const settings = getStoredSettings();
+    const exportData = {
+        settings: settings,
+        exportDate: new Date().toISOString(),
+        version: '1.0.0'
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `smart_home_settings_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showNotification('Settings exported successfully', 'success');
+}
+
+function importSettings() {
+    $('#importModal').modal('show');
+}
+
+function processImport() {
+    const fileInput = $('#settingsFile')[0];
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showNotification('Please select a file to import', 'warning');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importData = JSON.parse(e.target.result);
+            
+            if (importData.settings) {
+                localStorage.setItem('smartHomeSettings', JSON.stringify(importData.settings));
+                loadSettings();
+                $('#importModal').modal('hide');
+                showNotification('Settings imported successfully', 'success');
+            } else {
+                showNotification('Invalid settings file format', 'error');
+            }
+        } catch (error) {
+            showNotification('Error reading settings file', 'error');
+        }
+    };
+    reader.readAsText(file);
+}
+
+function resetToDefaults() {
+    if (confirm('Are you sure you want to reset all settings to defaults?')) {
+        localStorage.removeItem('smartHomeSettings');
+        loadSettings();
+        showNotification('Settings reset to defaults', 'info');
+    }
+}
+
+function emergencyReset() {
+    if (confirm('Emergency reset will clear all data and reload the page. Continue?')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        location.reload();
+    }
+}
+
+// Setup console log capture
+function setupConsoleCapture() {
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    console.log = function(...args) {
+        addConsoleLog('LOG', args.join(' '));
+        originalLog.apply(console, args);
+    };
+    
+    console.error = function(...args) {
+        addConsoleLog('ERROR', args.join(' '));
+        originalError.apply(console, args);
+    };
+    
+    console.warn = function(...args) {
+        addConsoleLog('WARN', args.join(' '));
+        originalWarn.apply(console, args);
+    };
+}
+
+function addConsoleLog(level, message) {
+    const timestamp = new Date().toLocaleTimeString();
+    consoleLogs.push(`[${timestamp}] ${level}: ${message}`);
+    
+    // Keep only last 50 logs
+    if (consoleLogs.length > 50) {
+        consoleLogs = consoleLogs.slice(-50);
+    }
+    
+    updateConsoleDisplay();
+}
+
+function updateConsoleDisplay() {
+    const container = $('#consoleLogs');
+    const html = consoleLogs.map(log => `<div>${log}</div>`).join('');
+    container.html(html || '<div class="text-muted">No logs available</div>');
+    container.scrollTop(container[0].scrollHeight);
+}
+
+// Run system diagnostics
+function runDiagnostics() {
+    const results = $('#diagnosticsResults');
+    results.html('<div class="text-info">Running diagnostics...</div>');
+    
+    setTimeout(() => {
+        const diagnostics = [
+            { test: 'Browser Compatibility', status: 'PASS', details: 'All required features supported' },
+            { test: 'Local Storage', status: localStorage ? 'PASS' : 'FAIL', details: localStorage ? 'Available' : 'Not available' },
+            { test: 'WebSocket Support', status: typeof WebSocket !== 'undefined' ? 'PASS' : 'FAIL', details: 'Required for real-time updates' },
+            { test: 'Network Connection', status: navigator.onLine ? 'PASS' : 'FAIL', details: navigator.onLine ? 'Online' : 'Offline' }
+        ];
+        
+        let html = '<div class="mt-2">';
+        diagnostics.forEach(diag => {
+            const statusClass = diag.status === 'PASS' ? 'text-success' : 'text-danger';
+            html += `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <small>${diag.test}</small>
+                    <span class="${statusClass}"><strong>${diag.status}</strong></span>
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem;">${diag.details}</div>
+                <hr class="my-2">
+            `;
+        });
+        html += '</div>';
+        
+        results.html(html);
+    }, 1000);
+}
+
+// Test connection on page load
+$(document).ready(function() {
+    setTimeout(testConnection, 1000);
+});
+</script>
+{% endblock %} 

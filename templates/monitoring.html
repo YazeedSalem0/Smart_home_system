@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Monitoring - Smart Home System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Real-time Charts -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Real-time Sensor Data</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="sensorChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>System Logs</h5>
+            </div>
+            <div class="card-body">
+                <div id="system-logs" style="height: 300px; overflow-y: auto;">
+                    <div class="text-center py-4">
+                        <div class="loading"></div>
+                        <p class="mt-2 text-muted">Loading logs...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Status Grid -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-th-large me-2"></i>Device Status Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="device-grid">
+                    <!-- Device cards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let sensorChart;
+let sensorData = {
+    temperature: [],
+    humidity: [],
+    timestamps: []
+};
+let systemLogs = [];
+
+// Initialize monitoring page
+$(document).ready(function() {
+    initializeChart();
+    initializeDeviceGrid();
+    
+    // Override the main update function
+    if (typeof updateSystemData === 'function') {
+        const originalUpdate = updateSystemData;
+        updateSystemData = function(data) {
+            originalUpdate(data);
+            updateMonitoringData(data);
+        };
+    }
+});
+
+// Initialize the sensor chart
+function initializeChart() {
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+    
+    sensorChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Temperature (°C)',
+                data: [],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.1,
+                yAxisID: 'y'
+            }, {
+                label: 'Humidity (%)',
+                data: [],
+                borderColor: 'rgb(54, 162, 235)',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.1,
+                yAxisID: 'y1'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Time'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Temperature (°C)'
+                    },
+                    min: 0,
+                    max: 50
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Humidity (%)'
+                    },
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: 'Temperature and Humidity Over Time'
+                }
+            }
+        }
+    });
+}
+
+// Initialize device status grid
+function initializeDeviceGrid() {
+    const grid = $('#device-grid');
+    
+    const devices = [
+        { id: 'fans', name: 'Fans', icon: 'fas fa-fan', type: 'fan' },
+        { id: 'door', name: 'Door Lock', icon: 'fas fa-door-closed', type: 'door' },
+        { id: 'garage', name: 'Garage Door', icon: 'fas fa-warehouse', type: 'garage' },
+        { id: 'gas', name: 'Gas Sensor', icon: 'fas fa-exclamation-triangle', type: 'gas' },
+        { id: 'emergency', name: 'Emergency Mode', icon: 'fas fa-exclamation-circle', type: 'emergency' },
+        { id: 'face', name: 'Face Recognition', icon: 'fas fa-user-check', type: 'face' }
+    ];
+    
+    devices.forEach(device => {
+        grid.append(createDeviceCard(device));
+    });
+}
+
+// Create device status card
+function createDeviceCard(device) {
+    return `
+        <div class="col-md-4 col-lg-2 mb-3">
+            <div class="card text-center device-card" id="device-${device.id}">
+                <div class="card-body">
+                    <i class="${device.icon} fa-2x mb-2 device-icon"></i>
+                    <h6 class="card-title">${device.name}</h6>
+                    <span class="badge device-status">Loading...</span>
+                    <div class="mt-2">
+                        <small class="text-muted last-update">--</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Update monitoring data
+function updateMonitoringData(data) {
+    updateSensorChart(data);
+    updateDeviceStatuses(data);
+    addSystemLog(`System update received at ${new Date().toLocaleTimeString()}`);
+}
+
+// Update sensor chart with new data
+function updateSensorChart(data) {
+    const now = new Date();
+    const timeLabel = now.toLocaleTimeString();
+    
+    // Add new data point
+    sensorData.timestamps.push(timeLabel);
+    sensorData.temperature.push(data.temperature || 0);
+    sensorData.humidity.push(data.humidity || 0);
+    
+    // Keep only last 20 data points
+    if (sensorData.timestamps.length > 20) {
+        sensorData.timestamps.shift();
+        sensorData.temperature.shift();
+        sensorData.humidity.shift();
+    }
+    
+    // Update chart
+    sensorChart.data.labels = sensorData.timestamps;
+    sensorChart.data.datasets[0].data = sensorData.temperature;
+    sensorChart.data.datasets[1].data = sensorData.humidity;
+    sensorChart.update('none'); // No animation for real-time updates
+}
+
+// Update device statuses
+function updateDeviceStatuses(data) {
+    const deviceMappings = {
+        'fans': { value: data.fans_on, type: 'fan' },
+        'door': { value: data.door_locked, type: 'door' },
+        'garage': { value: data.garage_door_open, type: 'garage' },
+        'gas': { value: data.gas_detected, type: 'gas' },
+        'emergency': { value: data.emergency_mode, type: 'emergency' },
+        'face': { value: data.face_recognized, type: 'face' }
+    };
+    
+    Object.keys(deviceMappings).forEach(deviceId => {
+        const device = deviceMappings[deviceId];
+        const card = $(`#device-${deviceId}`);
+        const status = formatDeviceStatus(device.value, device.type);
+        
+        card.find('.device-status')
+            .removeClass('bg-success bg-danger bg-warning bg-secondary')
+            .addClass(status.class)
+            .text(status.text);
+        
+        card.find('.last-update').text(new Date().toLocaleTimeString());
+        
+        // Update icon color based on status
+        const icon = card.find('.device-icon');
+        icon.removeClass('text-success text-danger text-warning text-secondary');
+        
+        if (status.class.includes('success')) {
+            icon.addClass('text-success');
+        } else if (status.class.includes('danger')) {
+            icon.addClass('text-danger');
+        } else if (status.class.includes('warning')) {
+            icon.addClass('text-warning');
+        } else {
+            icon.addClass('text-secondary');
+        }
+    });
+}
+
+// Add system log entry
+function addSystemLog(message) {
+    const timestamp = new Date().toLocaleTimeString();
+    systemLogs.unshift(`[${timestamp}] ${message}`);
+    
+    // Keep only last 50 log entries
+    if (systemLogs.length > 50) {
+        systemLogs = systemLogs.slice(0, 50);
+    }
+    
+    updateSystemLogsDisplay();
+}
+
+// Update system logs display
+function updateSystemLogsDisplay() {
+    const logsContainer = $('#system-logs');
+    
+    if (systemLogs.length === 0) {
+        logsContainer.html('<p class="text-muted text-center">No logs available</p>');
+        return;
+    }
+    
+    const logsHtml = systemLogs.map(log => 
+        `<div class="log-entry">${log}</div>`
+    ).join('');
+    
+    logsContainer.html(logsHtml);
+    
+    // Auto-scroll to top for new entries
+    logsContainer.scrollTop(0);
+}
+
+// Export chart data
+function exportChartData() {
+    const csvData = [];
+    csvData.push(['Timestamp', 'Temperature (°C)', 'Humidity (%)']);
+    
+    for (let i = 0; i < sensorData.timestamps.length; i++) {
+        csvData.push([
+            sensorData.timestamps[i],
+            sensorData.temperature[i],
+            sensorData.humidity[i]
+        ]);
+    }
+    
+    const csvContent = csvData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sensor_data_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+// Add export button to chart card
+$(document).ready(function() {
+    $('.card-header:contains("Real-time Sensor Data")').append(`
+        <button type="button" class="btn btn-light btn-sm float-end" onclick="exportChartData()">
+            <i class="fas fa-download me-1"></i>Export Data
+        </button>
+    `);
+    
+    // Initialize with some sample logs
+    addSystemLog('Monitoring system initialized');
+    addSystemLog('Connecting to smart home system...');
+});
+</script>
+
+<style>
+.device-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.device-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.device-icon {
+    transition: all 0.3s ease;
+}
+
+.log-entry {
+    padding: 5px 10px;
+    margin-bottom: 2px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    border-left: 3px solid #007bff;
+}
+
+.log-entry:nth-child(even) {
+    background-color: #e9ecef;
+}
+
+#system-logs {
+    font-size: 0.9rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+</style>
+{% endblock %} 

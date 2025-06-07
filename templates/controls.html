@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Controls - Smart Home System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Fan Controls -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-fan me-2"></i>Fan Control</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Current Status:</span>
+                            <span id="fan-current-status" class="badge bg-secondary">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Auto Mode:</span>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="fan-auto-mode">
+                                <label class="form-check-label" for="fan-auto-mode"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-success" onclick="controlFan('on')">
+                                <i class="fas fa-play me-1"></i>Turn On
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="controlFan('off')">
+                                <i class="fas fa-stop me-1"></i>Turn Off
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lighting Controls -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Lighting Control</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="room-select" class="form-label">Select Room:</label>
+                        <select class="form-select" id="room-select">
+                            <option value="all">All Rooms</option>
+                            <option value="Room1">Room 1</option>
+                            <option value="Room2">Room 2</option>
+                            <option value="Room3">Room 3</option>
+                            <option value="LivingRoom">Living Room</option>
+                        </select>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Auto Mode:</span>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="light-auto-mode">
+                                <label class="form-check-label" for="light-auto-mode"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-light text-dark" onclick="controlLight('white')">
+                                <i class="fas fa-circle me-1" style="color: white; text-shadow: 0 0 2px black;"></i>White
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="controlLight('red')">
+                                <i class="fas fa-circle me-1" style="color: red;"></i>Red
+                            </button>
+                            <button type="button" class="btn btn-outline-dark" onclick="controlLight('off')">
+                                <i class="fas fa-power-off me-1"></i>Off
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Controls -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Security Control</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <h6>Door Lock</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Current Status:</span>
+                            <span id="door-current-status" class="badge bg-secondary">Loading...</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Auto Mode:</span>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="door-auto-mode">
+                                <label class="form-check-label" for="door-auto-mode"></label>
+                            </div>
+                        </div>
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-success" onclick="controlDoor('unlock')">
+                                <i class="fas fa-unlock me-1"></i>Unlock
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="controlDoor('lock')">
+                                <i class="fas fa-lock me-1"></i>Lock
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Garage Controls -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-warehouse me-2"></i>Garage Control</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Current Status:</span>
+                            <span id="garage-current-status" class="badge bg-secondary">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Auto Mode:</span>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="garage-auto-mode">
+                                <label class="form-check-label" for="garage-auto-mode"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-success" onclick="controlGarage('open')">
+                                <i class="fas fa-door-open me-1"></i>Open
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="controlGarage('close')">
+                                <i class="fas fa-door-closed me-1"></i>Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Controls -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>System Controls</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="emergencyStop()">
+                            <i class="fas fa-stop-circle me-1"></i>Emergency Stop
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button type="button" class="btn btn-outline-success w-100" onclick="allLightsOn()">
+                            <i class="fas fa-lightbulb me-1"></i>All Lights On
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button type="button" class="btn btn-outline-warning w-100" onclick="allLightsOff()">
+                            <i class="fas fa-power-off me-1"></i>All Lights Off
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <button type="button" class="btn btn-outline-info w-100" onclick="systemReset()">
+                            <i class="fas fa-redo me-1"></i>System Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Override Status -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-hand-paper me-2"></i>Manual Override Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="override-status">
+                    <div class="col-md-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Fans:</span>
+                            <span id="override-fans" class="badge bg-secondary">Auto</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Lights:</span>
+                            <span id="override-lights" class="badge bg-secondary">Auto</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Door:</span>
+                            <span id="override-door" class="badge bg-secondary">Auto</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Garage:</span>
+                            <span id="override-garage" class="badge bg-secondary">Auto</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Controls-specific JavaScript
+function updateControlsStatus(data) {
+    // Update fan status
+    $('#fan-current-status').text(data.fans_on ? 'ON' : 'OFF')
+                           .removeClass('bg-success bg-danger bg-secondary')
+                           .addClass(data.fans_on ? 'bg-success' : 'bg-danger');
+    
+    // Update door status
+    $('#door-current-status').text(data.door_locked ? 'LOCKED' : 'UNLOCKED')
+                            .removeClass('bg-success bg-danger bg-secondary')
+                            .addClass(data.door_locked ? 'bg-success' : 'bg-danger');
+    
+    // Update garage status
+    $('#garage-current-status').text(data.garage_door_open ? 'OPEN' : 'CLOSED')
+                              .removeClass('bg-warning bg-success bg-secondary')
+                              .addClass(data.garage_door_open ? 'bg-warning' : 'bg-success');
+    
+    // Update manual override status
+    if (data.manual_override) {
+        $('#override-fans').text(data.manual_override.fans ? 'Manual' : 'Auto')
+                          .removeClass('bg-warning bg-secondary')
+                          .addClass(data.manual_override.fans ? 'bg-warning' : 'bg-secondary');
+        
+        $('#override-door').text(data.manual_override.door ? 'Manual' : 'Auto')
+                          .removeClass('bg-warning bg-secondary')
+                          .addClass(data.manual_override.door ? 'bg-warning' : 'bg-secondary');
+        
+        $('#override-garage').text(data.manual_override.garage ? 'Manual' : 'Auto')
+                            .removeClass('bg-warning bg-secondary')
+                            .addClass(data.manual_override.garage ? 'bg-warning' : 'bg-secondary');
+        
+        // Check if any lights are in manual override
+        const lightsManual = Object.values(data.manual_override.lights || {}).some(val => val);
+        $('#override-lights').text(lightsManual ? 'Manual' : 'Auto')
+                            .removeClass('bg-warning bg-secondary')
+                            .addClass(lightsManual ? 'bg-warning' : 'bg-secondary');
+    }
+}
+
+// Control functions
+function controlFan(action) {
+    const data = { action: action };
+    
+    $.post('/api/control/fan', data)
+        .done(function(response) {
+            if (response.success) {
+                showNotification(`Fan ${action} command sent successfully`, 'success');
+            } else {
+                showNotification('Failed to control fan', 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Error communicating with system', 'error');
+        });
+}
+
+function controlLight(color) {
+    const room = $('#room-select').val();
+    const data = { 
+        room: room,
+        color: color
+    };
+    
+    $.post('/api/control/light', data)
+        .done(function(response) {
+            if (response.success) {
+                showNotification(`Light ${color} command sent for ${room}`, 'success');
+            } else {
+                showNotification('Failed to control lights', 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Error communicating with system', 'error');
+        });
+}
+
+function controlDoor(action) {
+    const data = { action: action };
+    
+    $.post('/api/control/door', data)
+        .done(function(response) {
+            if (response.success) {
+                showNotification(`Door ${action} command sent successfully`, 'success');
+            } else {
+                showNotification('Failed to control door', 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Error communicating with system', 'error');
+        });
+}
+
+function controlGarage(action) {
+    const data = { action: action };
+    
+    $.post('/api/control/garage', data)
+        .done(function(response) {
+            if (response.success) {
+                showNotification(`Garage ${action} command sent successfully`, 'success');
+            } else {
+                showNotification('Failed to control garage', 'error');
+            }
+        })
+        .fail(function() {
+            showNotification('Error communicating with system', 'error');
+        });
+}
+
+// System control functions
+function emergencyStop() {
+    if (confirm('Are you sure you want to trigger emergency stop? This will turn off all systems.')) {
+        // Implementation for emergency stop
+        showNotification('Emergency stop activated', 'warning');
+    }
+}
+
+function allLightsOn() {
+    controlLight('white');
+}
+
+function allLightsOff() {
+    controlLight('off');
+}
+
+function systemReset() {
+    if (confirm('Are you sure you want to reset the system? This will restore all automation settings.')) {
+        // Implementation for system reset
+        showNotification('System reset initiated', 'info');
+    }
+}
+
+// Auto mode toggle handlers
+$('#fan-auto-mode').change(function() {
+    const autoMode = $(this).is(':checked');
+    $.post('/api/control/fan/auto', { auto: autoMode })
+        .done(function(response) {
+            if (response.success) {
+                showNotification(`Fan auto mode ${autoMode ? 'enabled' : 'disabled'}`, 'info');
+            }
+        });
+});
+
+$('#light-auto-mode').change(function() {
+    const autoMode = $(this).is(':checked');
+    $.post('/api/control/light/auto', { auto: autoMode })
+        .done(function(response) {
+            if (response.success) {
+                showNotification(`Light auto mode ${autoMode ? 'enabled' : 'disabled'}`, 'info');
+            }
+        });
+});
+
+$('#door-auto-mode').change(function() {
+    const autoMode = $(this).is(':checked');
+    $.post('/api/control/door/auto', { auto: autoMode })
+        .done(function(response) {
+            if (response.success) {
+                showNotification(`Door auto mode ${autoMode ? 'enabled' : 'disabled'}`, 'info');
+            }
+        });
+});
+
+$('#garage-auto-mode').change(function() {
+    const autoMode = $(this).is(':checked');
+    $.post('/api/control/garage/auto', { auto: autoMode })
+        .done(function(response) {
+            if (response.success) {
+                showNotification(`Garage auto mode ${autoMode ? 'enabled' : 'disabled'}`, 'info');
+            }
+        });
+});
+
+// Notification function
+function showNotification(message, type) {
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
+    
+    const notification = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 1050; min-width: 300px;">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+    
+    $('body').append(notification);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        notification.alert('close');
+    }, 3000);
+}
+
+// Initialize controls page
+$(document).ready(function() {
+    // Set up real-time updates
+    if (typeof updateSystemData === 'function') {
+        const originalUpdate = updateSystemData;
+        updateSystemData = function(data) {
+            originalUpdate(data);
+            updateControlsStatus(data);
+        };
+    }
+});
+</script>
+{% endblock %} 
