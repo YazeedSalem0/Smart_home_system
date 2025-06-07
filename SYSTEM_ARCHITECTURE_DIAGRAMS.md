@@ -401,11 +401,11 @@ graph TB
     end
     
     subgraph "API Endpoints"
-        STATE_API[/api/state]
-        CONTROL_API[/api/control/*]
-        RULES_API[/api/rules/*]
-        FACE_API[/api/face/*]
-        SYSTEM_API[/api/system/*]
+        STATE_API["API: /state"]
+        CONTROL_API["API: /control/*"]
+        RULES_API["API: /rules/*"]
+        FACE_API["API: /face/*"]
+        SYSTEM_API["API: /system/*"]
     end
     
     subgraph "Core System"
